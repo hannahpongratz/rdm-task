@@ -37,8 +37,8 @@
   const DATAPIPE_ID = "XHncwobjAXd1"; // <-- Paste your DataPipe ID here
 
   // Canvas Dimensions (50% larger than 400x300)
-  const canvasWidth = 400;
-  const canvasHeight = 300;
+  const canvasWidth = 600;
+  const canvasHeight = 450;
   const lineY = canvasHeight / 2;
   const centerX = canvasWidth / 2;
   const tickHeight = 45; // Height of the central vertical line
@@ -87,7 +87,7 @@
 
   // Helper Function: Generates Canvas showing a bisected horizontal line
   function generateLineBisectionHTML(coherence, longer_side) {
-    const lineThickness = 8;
+    const lineThickness = 6;
 
     // Base line half-length scaled up 50% (150px half-length, 300px base total)
     const baseHalfLength = 150;
@@ -173,26 +173,31 @@
   // SECTION B: PRACTICE PHASE (20 TRIALS)
   // ==========================================
   const practice_conditions = [
-    { coherence: 0.70, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.65, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.80, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.70, dominant: 'LEFT',  correct_key: 'a' },
     { coherence: 0.60, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.55, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.50, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.40, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.35, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.50, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.40, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.30, dominant: 'RIGHT', correct_key: 'l' },
     { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.20, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.20, dominant: 'RIGHT', correct_key: 'l' },
     { coherence: 0.15, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.10, dominant: 'RIGHT', correct_key: 'l' },
     { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.10, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' }
+    { coherence: 0.06, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.06, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.06, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.06, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.06, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' }
   ];
 
   const practice_trial = {
@@ -239,7 +244,7 @@
     stimulus: `
       <h2>Practice Complete!</h2>
       <p>You are now ready for the main experiment.</p>
-      <p>The main experiment consists of <b>10 blocks of 60 trials each</b>.</p>
+      <p>The main experiment consists of <b>10 blocks.</b>.</p>
       <br>
       <p>Press <b>SPACEBAR</b> to continue.</p>
     `,
@@ -264,12 +269,14 @@
   // SECTION D: MAIN EXPERIMENT (10 BLOCKS x 60 TRIALS)
   // ==========================================
   const main_conditions = [
-    { coherence: 0.95, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.95, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.25, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.10, dominant: 'RIGHT', correct_key: 'l' }
+    { coherence: 0.75, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.75, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.06, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.06, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' }
   ];
 
   const block_types = jsPsych.randomization.shuffle([
@@ -277,7 +284,7 @@
     'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY'
   ]);
 
-  for (let block_idx = 0; block_idx < 1; block_idx++) {
+  for (let block_idx = 0; block_idx < 10; block_idx++) {
     const current_block_type = block_types[block_idx];
 
     const block_cue = {
