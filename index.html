@@ -5,9 +5,11 @@
   <!-- jsPsych core & plugins -->
   <script src="https://unpkg.com/jspsych@7.3.4"></script>
   <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
-  <script src="https://unpkg.com/@jspsych/plugin-rdm@2.0.0"></script>
+  
+  <!-- CORRECTED RDK & PIPE PLUGIN LINKS -->
+  <script src="https://unpkg.com/@jspsych-contrib/plugin-rdk@1.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
-  <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe"></script>
+  <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe@0.4"></script>
 </head>
 <body style="background-color: black; color: white;"></body>
 <script>
@@ -60,7 +62,6 @@
   // ==========================================
   // SECTION B: PRACTICE PHASE (8 TRIALS)
   // ==========================================
-  // High to low coherence sequence with balanced directions
   const practice_conditions = [
     { coherence: 0.99, direction: 180, correct_key: 'a' },
     { coherence: 0.95, direction: 0,   correct_key: 'l' },
@@ -73,17 +74,16 @@
   ];
 
   const practice_trial = {
-    type: jsPsychRdm,
+    type: jsPsychRdk,
     choices: ['a', 'l'],
     correct_choice: () => jsPsych.timelineVariable('correct_key'),
     coherent_direction: () => jsPsych.timelineVariable('direction'),
     coherence: () => jsPsych.timelineVariable('coherence'),
     number_of_dots: 200,
     dot_life: 60,
-    speed: 3,
+    move_distance: 3,
     aperture_width: 400,
     aperture_height: 400,
-    prompt: "<p style='color: white;'>Press <b>A</b> (Left) or <b>L</b> (Right)</p>",
     data: {
       phase: 'practice',
       coherence: () => jsPsych.timelineVariable('coherence'),
@@ -106,7 +106,7 @@
   const practice_block = {
     timeline: [fixation, practice_trial, practice_feedback],
     timeline_variables: practice_conditions,
-    randomize_order: false // Runs sequentially from highest to lowest coherence
+    randomize_order: false
   };
 
   timeline.push(practice_block);
@@ -147,8 +147,6 @@
   // ==========================================
   // SECTION D: MAIN EXPERIMENT (10 BLOCKS x 60 TRIALS)
   // ==========================================
-  
-  // 6 combinations x 10 reps = 60 trials per block
   const main_conditions = [
     { coherence: 0.95, direction: 180, correct_key: 'a' },
     { coherence: 0.95, direction: 0,   correct_key: 'l' },
@@ -158,7 +156,6 @@
     { coherence: 0.10, direction: 0,   correct_key: 'l' }
   ];
 
-  // Randomize 5 Speed and 5 Accuracy blocks
   const block_types = jsPsych.randomization.shuffle([
     'SPEED', 'SPEED', 'SPEED', 'SPEED', 'SPEED',
     'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY'
@@ -167,7 +164,6 @@
   for (let block_idx = 0; block_idx < 10; block_idx++) {
     const current_block_type = block_types[block_idx];
 
-    // 1. Block Cue Screen (3 seconds = 3000ms)
     const block_cue = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: () => {
@@ -178,19 +174,17 @@
       trial_duration: 3000
     };
 
-    // 2. RDK Main Trial (No feedback, no cutoff deadline)
     const main_rdk_trial = {
-      type: jsPsychRdm,
+      type: jsPsychRdk,
       choices: ['a', 'l'],
       correct_choice: () => jsPsych.timelineVariable('correct_key'),
       coherent_direction: () => jsPsych.timelineVariable('direction'),
       coherence: () => jsPsych.timelineVariable('coherence'),
       number_of_dots: 200,
       dot_life: 60,
-      speed: 3,
+      move_distance: 3,
       aperture_width: 400,
       aperture_height: 400,
-      prompt: "<p style='color: white;'>Press <b>A</b> (Left) or <b>L</b> (Right)</p>",
       data: {
         phase: 'main',
         block_number: block_idx + 1,
@@ -200,15 +194,13 @@
       }
     };
 
-    // 3. Block Timeline (60 balanced trials)
     const block_timeline = {
       timeline: [fixation, main_rdk_trial],
       timeline_variables: main_conditions,
       randomize_order: true,
-      repetitions: 10 // 6 combinations * 10 = 60 trials
+      repetitions: 10
     };
 
-    // 4. Pause Screen after block (except after the final block)
     const break_screen = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: `
@@ -220,7 +212,6 @@
       choices: [' ']
     };
 
-    // Append block sequence
     timeline.push(block_cue, block_timeline);
     if (block_idx < 9) {
       timeline.push(break_screen);
@@ -242,7 +233,7 @@
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
       <h2>Experiment Complete!</h2>
-      <p>Thank you for participating. Your responses have been saved successfully.</p>
+      <p>Thank you for participating. Your responses have been recorded successfully.</p>
       <p>You can close this browser tab now.</p>
     `,
     choices: "NO_KEYS"
@@ -250,7 +241,6 @@
 
   timeline.push(save_data, end_screen);
 
-  // Run the experiment
   jsPsych.run(timeline);
 </script>
 </html>
