@@ -171,29 +171,29 @@
   // SECTION B: PRACTICE PHASE (25 TRIALS)
   // ==========================================
   const practice_conditions = [
-    { coherence: 0.80, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.70, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.60, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.50, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.40, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.30, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.20, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.25, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.80, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.70, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.60, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.50, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.40, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.30, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.20, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.25, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
+    // { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
+    // { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
     { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
     { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' }
   ];
@@ -288,7 +288,7 @@
     'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY'
   ]);
 
-  for (let block_idx = 0; block_idx < 10; block_idx++) {
+  for (let block_idx = 0; block_idx < 1; block_idx++) {
     const current_block_type = block_types[block_idx];
     let main_trial_counter = 0;
 
@@ -353,28 +353,50 @@
   }
 
   // ==========================================
-  // SECTION E: SAVE CLEAN DATA & END EXPERIMENT
+  // SECTION E: SAFE & CLEAN DATAPIPE SAVE
   // ==========================================
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
   const unique_filename = `${subject_id}_${timestamp}_line_data.csv`;
 
-  // Filter helper: extracts only practice & main trial data rows + key columns
-  function getCleanCSV() {
-    return jsPsych.data.get()
-      .filter({ is_task_trial: true })
-      .filterColumns([
-        'subject_id',
-        'phase',
-        'block_number',
-        'trial_number',
-        'coherence',
-        'target_side',
-        'block_condition',
-        'response_key',
-        'rt',
-        'correct'
-      ])
-      .csv();
+  // Robust function to generate clean CSV text without triggering DataPipe payload bugs
+  function buildCleanCSV() {
+    // 1. Get all trials marked as task trials
+    const task_trials = jsPsych.data.get().filter({ is_task_trial: true }).values();
+    
+    // 2. CSV Header
+    const headers = [
+      "subject_id",
+      "phase",
+      "block_number",
+      "trial_number",
+      "coherence",
+      "target_side",
+      "block_condition",
+      "response_key",
+      "rt",
+      "correct"
+    ];
+
+    let csv_rows = [headers.join(",")];
+
+    // 3. Format each trial row
+    task_trials.forEach(trial => {
+      const row = [
+        trial.subject_id ?? "",
+        trial.phase ?? "",
+        trial.block_number ?? 0,
+        trial.trial_number ?? 0,
+        trial.coherence ?? "",
+        trial.target_side ?? "",
+        trial.block_condition ?? "",
+        trial.response_key ?? "NONE",
+        trial.rt ?? "",
+        trial.correct ?? 0
+      ];
+      csv_rows.push(row.join(","));
+    });
+
+    return csv_rows.join("\n");
   }
 
   timeline.push({
@@ -382,25 +404,18 @@
     action: "save",
     experiment_id: DATAPIPE_ID,
     filename: unique_filename,
-    data_string: () => getCleanCSV(),
+    data_string: buildCleanCSV, // Pass clean function reference directly
     on_finish: (data) => {
+      console.log("DataPipe response:", data);
       if (!data.success) {
-        console.warn("DataPipe save failed. Prompting local download backup...");
-        jsPsych.data.get()
-          .filter({ is_task_trial: true })
-          .filterColumns([
-            'subject_id',
-            'phase',
-            'block_number',
-            'trial_number',
-            'coherence',
-            'target_side',
-            'block_condition',
-            'response_key',
-            'rt',
-            'correct'
-          ])
-          .localSave('csv', unique_filename);
+        console.warn("DataPipe online save failed. Downloading backup locally...");
+        
+        // Local fallback using Blob to ensure participant data is never lost
+        const blob = new Blob([buildCleanCSV()], { type: 'text/csv' });
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = unique_filename;
+        link.click();
       }
     }
   }, {
@@ -416,8 +431,8 @@
       } else {
         return `
           <h2>Experiment Complete!</h2>
-          <p style="color: #ffaa00;">Note: Online server could not be reached.</p>
-          <p>Your clean data file (<b>${unique_filename}</b>) has been downloaded to your Downloads folder.</p>
+          <p style="color: #ffaa00;">Note: DataPipe server could not complete online storage.</p>
+          <p>Your clean CSV file (<b>${unique_filename}</b>) has been downloaded directly to your Downloads folder.</p>
           <p>You can close this tab now.</p>
         `;
       }
