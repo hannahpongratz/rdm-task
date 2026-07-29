@@ -2,15 +2,23 @@
 <html>
 <head>
   <title>Random Dot Motion Task</title>
-  <!-- jsPsych core & plugins -->
+  <!-- jsPsych core & CSS -->
   <script src="https://unpkg.com/jspsych@7.3.4"></script>
   <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
   
+  <!-- Correct Plugin Imports -->
   <script src="https://unpkg.com/@jspsych-contrib/plugin-rdk@1.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
   <script src="https://unpkg.com/@jspsych-contrib/plugin-pipe@0.4"></script>
+
+  <style>
+    body {
+      background-color: black !important;
+      color: white;
+    }
+  </style>
 </head>
-<body style="background-color: black; color: white;"></body>
+<body></body>
 <script>
   const jsPsych = initJsPsych();
   const timeline = [];
@@ -19,36 +27,12 @@
   const filename = `${subject_id}_rdm_data.csv`;
   const DATAPIPE_ID = "XHncwobjAXd1"; // <-- Paste your DataPipe ID here
 
-  // Fixation Cross (0.5 seconds)
+  // Fixation Cross (0.5s)
   const fixation = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: '<p style="font-size: 50px; color: white;">+</p>',
     choices: "NO_KEYS",
     trial_duration: 500
-  };
-
-  // Shared Dot Motion Parameters matching your PsychoPy setup
-  const base_rdk_config = {
-    type: jsPsychRdk,
-    choices: ['a', 'l'],
-    correct_choice: () => jsPsych.timelineVariable('correct_key'),
-    coherent_direction: () => jsPsych.timelineVariable('direction'),
-    coherence: () => jsPsych.timelineVariable('coherence'),
-    
-    // NO DEADLINE - Wait for keypress
-    trial_duration: -1,
-    response_ends_trial: true,
-
-    // VISUAL & MOTION PARAMS (Exact PsychoPy Match)
-    background_color: "black",
-    dot_color: "white",
-    number_of_dots: 200,
-    dot_radius: 4,          // Dot size = 8px diameter
-    dot_life: 3,            // Lifetime = 3 frames
-    move_distance: 2,       // Speed = 2px/frame
-    RDK_type: 3,            // Signal: Same, Noise: Random Direction
-    aperture_type: "circle",
-    aperture_width: 400
   };
 
   // ==========================================
@@ -90,13 +74,35 @@
     { coherence: 0.10, direction: 0,   correct_key: 'l' }
   ];
 
-  const practice_trial = Object.assign({}, base_rdk_config, {
+  const practice_trial = {
+    type: jsPsychRdk,
+    choices: ['a', 'l'],
+    correct_choice: () => jsPsych.timelineVariable('correct_key'),
+    coherent_direction: () => jsPsych.timelineVariable('direction'),
+    coherence: () => jsPsych.timelineVariable('coherence'),
+    
+    // -1 = NO DEADLINE (Waits indefinitely for 'a' or 'l')
+    trial_duration: -1,
+    response_ends_trial: true,
+
+    // PSYCHOPY RDK PARAMETERS
+    background_color: "black",
+    dot_color: "white",
+    number_of_dots: 200,
+    dot_radius: 4,          // 8px diameter
+    dot_life: 3,            // Lifetime = 3 frames
+    move_distance: 2,       // Speed = 2px/frame
+    RDK_type: 3,            // Signal: Same, Noise: Random Direction
+    aperture_type: 1,       // 1 = Circle
+    aperture_width: 400,
+    aperture_height: 400,
+
     data: {
       phase: 'practice',
       coherence: () => jsPsych.timelineVariable('coherence'),
       direction: () => jsPsych.timelineVariable('direction')
     }
-  });
+  };
 
   const practice_feedback = {
     type: jsPsychHtmlKeyboardResponse,
@@ -173,7 +179,29 @@
       trial_duration: 3000
     };
 
-    const main_rdk_trial = Object.assign({}, base_rdk_config, {
+    const main_rdk_trial = {
+      type: jsPsychRdk,
+      choices: ['a', 'l'],
+      correct_choice: () => jsPsych.timelineVariable('correct_key'),
+      coherent_direction: () => jsPsych.timelineVariable('direction'),
+      coherence: () => jsPsych.timelineVariable('coherence'),
+      
+      // -1 = NO DEADLINE
+      trial_duration: -1,
+      response_ends_trial: true,
+
+      // PSYCHOPY RDK PARAMETERS
+      background_color: "black",
+      dot_color: "white",
+      number_of_dots: 200,
+      dot_radius: 4,          // 8px diameter
+      dot_life: 3,            // Lifetime = 3 frames
+      move_distance: 2,       // Speed = 2px/frame
+      RDK_type: 3,            // Signal: Same, Noise: Random Direction
+      aperture_type: 1,       // 1 = Circle
+      aperture_width: 400,
+      aperture_height: 400,
+
       data: {
         phase: 'main',
         block_number: block_idx + 1,
@@ -181,7 +209,7 @@
         coherence: () => jsPsych.timelineVariable('coherence'),
         direction: () => jsPsych.timelineVariable('direction')
       }
-    });
+    };
 
     const block_timeline = {
       timeline: [fixation, main_rdk_trial],
