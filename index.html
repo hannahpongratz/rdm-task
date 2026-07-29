@@ -33,19 +33,17 @@
   const timeline = [];
 
   const subject_id = jsPsych.randomization.randomID(10);
+  const filename = `${subject_id}_line_bisection_data.csv`;
   const DATAPIPE_ID = "XHncwobjAXd1"; // <-- Paste your DataPipe ID here
 
-  // Canvas Dimensions
-  const canvasWidth = 600;
-  const canvasHeight = 450;
+  // Canvas Dimensions (50% larger than 400x300)
+  const canvasWidth = 400;
+  const canvasHeight = 300;
   const lineY = canvasHeight / 2;
   const centerX = canvasWidth / 2;
-  const tickHeight = 45; 
+  const tickHeight = 45; // Height of the central vertical line
 
-  // Track trial index within current phase/block
-  let practice_trial_counter = 0;
-
-  // Helper Function: Generates Canvas for Fixation Cross
+  // Helper Function: Generates Canvas for Fixation Cross matching the stimulus tick geometry
   function generateFixationHTML() {
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
@@ -55,6 +53,7 @@
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
+    // Draw central fixation cross with exact same vertical tick alignment
     ctx.strokeStyle = "white";
     ctx.lineWidth = 6;
     
@@ -88,11 +87,12 @@
 
   // Helper Function: Generates Canvas showing a bisected horizontal line
   function generateLineBisectionHTML(coherence, longer_side) {
-    const lineThickness = 6;
+    const lineThickness = 8;
+
+    // Base line half-length scaled up 50% (150px half-length, 300px base total)
     const baseHalfLength = 150;
-    
-    // Coherence 1.0 = 150px offset (line exists 100% on one side)
-    const offsetPixels = Math.round(coherence * baseHalfLength);
+    // Coherence determines the pixel offset of the bisection mark (max offset = 90px at coherence 0.95)
+    const offsetPixels = Math.round(coherence * 90);
 
     let leftLength, rightLength;
     if (longer_side === 'LEFT') {
@@ -106,15 +106,17 @@
     const startX = centerX - leftLength;
     const endX = centerX + rightLength;
 
+    // Render Canvas
     const canvas = document.createElement('canvas');
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
     const ctx = canvas.getContext('2d');
 
+    // Background
     ctx.fillStyle = "black";
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
-    // Main Line
+    // Main Horizontal Line
     ctx.strokeStyle = "white";
     ctx.lineWidth = lineThickness;
     ctx.beginPath();
@@ -122,7 +124,7 @@
     ctx.lineTo(endX, lineY);
     ctx.stroke();
 
-    // Center Vertical Tick
+    // Bisection Mark (Vertical Tick) perfectly aligned with the fixation cross vertical bar
     ctx.lineWidth = 6;
     ctx.beginPath();
     ctx.moveTo(centerX, lineY - (tickHeight / 2));
@@ -168,34 +170,29 @@
   });
 
   // ==========================================
-  // SECTION B: PRACTICE PHASE (25 TRIALS)
+  // SECTION B: PRACTICE PHASE (20 TRIALS)
   // ==========================================
   const practice_conditions = [
-    // { coherence: 0.80, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.70, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.60, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.50, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.40, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.30, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.20, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.25, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
-    // { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
-    // { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' }
+    { coherence: 0.70, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.65, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.60, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.55, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.50, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.40, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.35, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.20, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.15, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.10, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.10, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' }
   ];
 
   const practice_trial = {
@@ -205,22 +202,11 @@
       jsPsych.timelineVariable('coherence'), 
       jsPsych.timelineVariable('dominant')
     ),
-    on_finish: (data) => {
-      practice_trial_counter++;
-      const key_pressed = data.response === 'a' ? 'LEFT' : (data.response === 'l' ? 'RIGHT' : 'NONE');
-      const is_correct = data.response === jsPsych.timelineVariable('correct_key') ? 1 : 0;
-
-      data.is_task_trial = true; // Data marker for filtering
-      data.subject_id = subject_id;
-      data.phase = 'practice';
-      data.block_number = 0;
-      data.trial_number = practice_trial_counter;
-      data.coherence = jsPsych.timelineVariable('coherence');
-      data.target_side = jsPsych.timelineVariable('dominant');
-      data.block_condition = 'PRACTICE';
-      data.response_key = key_pressed;
-      data.rt = data.rt ? Math.round(data.rt) : null;
-      data.correct = is_correct;
+    data: {
+      phase: 'practice',
+      coherence: () => jsPsych.timelineVariable('coherence'),
+      dominant_side: () => jsPsych.timelineVariable('dominant'),
+      correct_key: () => jsPsych.timelineVariable('correct_key')
     }
   };
 
@@ -228,7 +214,10 @@
     type: jsPsychHtmlKeyboardResponse,
     stimulus: () => {
       const last_trial = jsPsych.data.get().last(1).values()[0];
-      return last_trial.correct === 1 
+      const is_correct = last_trial.response === last_trial.correct_key;
+      jsPsych.data.get().last(1).addToLast({ correct: is_correct });
+
+      return is_correct 
         ? '<p style="font-size: 36px; color: #00ff00; font-weight: bold;">Correct!</p>' 
         : '<p style="font-size: 36px; color: #ff3333; font-weight: bold;">Incorrect</p>';
     },
@@ -275,12 +264,12 @@
   // SECTION D: MAIN EXPERIMENT (10 BLOCKS x 60 TRIALS)
   // ==========================================
   const main_conditions = [
-    { coherence: 0.75, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.75, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.015, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.015, dominant: 'RIGHT', correct_key: 'l' }
+    { coherence: 0.95, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.95, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.25, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
+    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
+    { coherence: 0.10, dominant: 'RIGHT', correct_key: 'l' }
   ];
 
   const block_types = jsPsych.randomization.shuffle([
@@ -288,9 +277,8 @@
     'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY', 'ACCURACY'
   ]);
 
-  for (let block_idx = 0; block_idx < 1; block_idx++) {
+  for (let block_idx = 0; block_idx < 10; block_idx++) {
     const current_block_type = block_types[block_idx];
-    let main_trial_counter = 0;
 
     const block_cue = {
       type: jsPsychHtmlKeyboardResponse,
@@ -310,21 +298,15 @@
         jsPsych.timelineVariable('dominant')
       ),
       on_finish: (data) => {
-        main_trial_counter++;
-        const key_pressed = data.response === 'a' ? 'LEFT' : (data.response === 'l' ? 'RIGHT' : 'NONE');
-        const is_correct = data.response === jsPsych.timelineVariable('correct_key') ? 1 : 0;
-
-        data.is_task_trial = true;
-        data.subject_id = subject_id;
-        data.phase = 'main';
-        data.block_number = block_idx + 1;
-        data.trial_number = main_trial_counter;
-        data.coherence = jsPsych.timelineVariable('coherence');
-        data.target_side = jsPsych.timelineVariable('dominant');
-        data.block_condition = current_block_type;
-        data.response_key = key_pressed;
-        data.rt = data.rt ? Math.round(data.rt) : null;
-        data.correct = is_correct;
+        data.correct = data.response === jsPsych.timelineVariable('correct_key');
+      },
+      data: {
+        phase: 'main',
+        block_number: block_idx + 1,
+        block_condition: current_block_type,
+        coherence: () => jsPsych.timelineVariable('coherence'),
+        dominant_side: () => jsPsych.timelineVariable('dominant'),
+        correct_key: () => jsPsych.timelineVariable('correct_key')
       }
     };
 
@@ -332,7 +314,7 @@
       timeline: [fixation, main_trial],
       timeline_variables: main_conditions,
       randomize_order: true,
-      repetitions: 1
+      repetitions: 10
     };
 
     const break_screen = {
