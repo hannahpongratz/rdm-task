@@ -353,90 +353,21 @@
   }
 
   // ==========================================
-  // SECTION E: SAFE & CLEAN DATAPIPE SAVE
+  // SECTION E: SAVE DATA & END EXPERIMENT
   // ==========================================
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const unique_filename = `${subject_id}_${timestamp}_line_data.csv`;
-
-  // Robust function to generate clean CSV text without triggering DataPipe payload bugs
-  function buildCleanCSV() {
-    // 1. Get all trials marked as task trials
-    const task_trials = jsPsych.data.get().filter({ is_task_trial: true }).values();
-    
-    // 2. CSV Header
-    const headers = [
-      "subject_id",
-      "phase",
-      "block_number",
-      "trial_number",
-      "coherence",
-      "target_side",
-      "block_condition",
-      "response_key",
-      "rt",
-      "correct"
-    ];
-
-    let csv_rows = [headers.join(",")];
-
-    // 3. Format each trial row
-    task_trials.forEach(trial => {
-      const row = [
-        trial.subject_id ?? "",
-        trial.phase ?? "",
-        trial.block_number ?? 0,
-        trial.trial_number ?? 0,
-        trial.coherence ?? "",
-        trial.target_side ?? "",
-        trial.block_condition ?? "",
-        trial.response_key ?? "NONE",
-        trial.rt ?? "",
-        trial.correct ?? 0
-      ];
-      csv_rows.push(row.join(","));
-    });
-
-    return csv_rows.join("\n");
-  }
-
   timeline.push({
     type: jsPsychPipe,
     action: "save",
     experiment_id: DATAPIPE_ID,
-    filename: unique_filename,
-    data_string: buildCleanCSV, // Pass clean function reference directly
-    on_finish: (data) => {
-      console.log("DataPipe response:", data);
-      if (!data.success) {
-        console.warn("DataPipe online save failed. Downloading backup locally...");
-        
-        // Local fallback using Blob to ensure participant data is never lost
-        const blob = new Blob([buildCleanCSV()], { type: 'text/csv' });
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = unique_filename;
-        link.click();
-      }
-    }
+    filename: filename,
+    data_string: () => jsPsych.data.get().csv()
   }, {
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: () => {
-      const last_trial = jsPsych.data.get().last(1).values()[0];
-      if (last_trial && last_trial.success) {
-        return `
-          <h2>Experiment Complete!</h2>
-          <p>Your responses have been saved online successfully.</p>
-          <p>You can close this browser tab now.</p>
-        `;
-      } else {
-        return `
-          <h2>Experiment Complete!</h2>
-          <p style="color: #ffaa00;">Note: DataPipe server could not complete online storage.</p>
-          <p>Your clean CSV file (<b>${unique_filename}</b>) has been downloaded directly to your Downloads folder.</p>
-          <p>You can close this tab now.</p>
-        `;
-      }
-    },
+    stimulus: `
+      <h2>Experiment Complete!</h2>
+      <p>Thank you for participating. Your responses have been saved successfully.</p>
+      <p>You can close this browser tab now.</p>
+    `,
     choices: "NO_KEYS"
   });
 
