@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Line Length Discrimination Task</title>
+  <title>Color Array Discrimination (Orange vs Blue)</title>
   <!-- jsPsych core & CSS -->
   <script src="https://unpkg.com/jspsych@7.3.4"></script>
   <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" type="text/css" />
@@ -16,14 +16,15 @@
       color: white !important;
       font-family: Arial, sans-serif;
     }
-    .stimulus-layout {
+    .pixel-canvas-container {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin-top: 20px;
+      margin: 20px 0;
     }
     canvas {
       border: 3px solid #555;
+      image-rendering: pixelated;
     }
   </style>
 </head>
@@ -33,110 +34,62 @@
   const timeline = [];
 
   const subject_id = jsPsych.randomization.randomID(10);
-  const filename = `${subject_id}_line_bisection_data.csv`;
-  const DATAPIPE_ID = "XHncwobjAXd1"; // <-- Paste your DataPipe ID here
+  const filename = `${subject_id}_color_data.csv`;
+  const DATAPIPE_ID = "YOUR_DATAPIPE_ID_HERE"; // <-- Paste your DataPipe ID here
 
-  // Canvas Dimensions (50% larger than 400x300)
-  const canvasWidth = 600;
-  const canvasHeight = 450;
-  const lineY = canvasHeight / 2;
-  const centerX = canvasWidth / 2;
-  const tickHeight = 45; // Height of the central vertical line
-
-  // Helper Function: Generates Canvas for Fixation Cross matching the stimulus tick geometry
-  function generateFixationHTML() {
-    const canvas = document.createElement('canvas');
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    const ctx = canvas.getContext('2d');
-
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    // Draw central fixation cross with exact same vertical tick alignment
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = 6;
-    
-    // Horizontal segment of fixation cross
-    ctx.beginPath();
-    ctx.moveTo(centerX - 22, lineY);
-    ctx.lineTo(centerX + 22, lineY);
-    ctx.stroke();
-
-    // Vertical segment matching tick height and X position
-    ctx.beginPath();
-    ctx.moveTo(centerX, lineY - (tickHeight / 2));
-    ctx.lineTo(centerX, lineY + (tickHeight / 2));
-    ctx.stroke();
-
-    const dataURL = canvas.toDataURL();
-    return `
-      <div class="stimulus-layout">
-        <img src="${dataURL}" style="width: ${canvasWidth}px; height: ${canvasHeight}px; border: 3px solid #555;" />
-      </div>
-    `;
-  }
-
-  // Canvas Fixation Trial (0.5 seconds)
+  // Shared Fixation Cross (0.5 seconds)
   const fixation = {
     type: jsPsychHtmlKeyboardResponse,
-    stimulus: () => generateFixationHTML(),
+    stimulus: '<p style="font-size: 50px; color: white; font-weight: bold;">+</p>',
     choices: "NO_KEYS",
     trial_duration: 500
   };
 
-  // Helper Function: Generates Canvas showing a bisected horizontal line
-  function generateLineBisectionHTML(coherence, longer_side) {
-    const lineThickness = 6;
+  // Helper Function: Generates a Canvas showing a grid of Orange vs Blue pixels
+  function generatePixelArrayHTML(coherence, dominant_color) {
+    const gridSize = 50; 
+    const canvasSize = 300;
+    const totalPixels = gridSize * gridSize;
 
-    // Base line half-length (150px half-length = 300px total line length)
-    const baseHalfLength = 150;
-    
-    // NOW: Coherence 1.0 shifts the tick by full 150px (0px on short side, 300px on long side)
-    const offsetPixels = Math.round(coherence * baseHalfLength);
+    // Proportion of dominant pixels (0.5 = 50/50 chance; 1.0 = 100% dominant)
+    const dominantProportion = 0.5 + (coherence / 2);
+    const numDominant = Math.round(totalPixels * dominantProportion);
+    const numOther = totalPixels - numDominant;
 
-    let leftLength, rightLength;
-    if (longer_side === 'LEFT') {
-      leftLength = baseHalfLength + offsetPixels;
-      rightLength = baseHalfLength - offsetPixels;
-    } else {
-      leftLength = baseHalfLength - offsetPixels;
-      rightLength = baseHalfLength + offsetPixels;
-    }
+    // Luminance-Matched RGB Pairs for Dark Background
+    const COLOR_ORANGE = [255, 119, 0];   // Vibrant Orange
+    const COLOR_BLUE   = [0, 136, 255];   // Bright Blue
 
-    const startX = centerX - leftLength;
-    const endX = centerX + rightLength;
+    const dominantVal = (dominant_color === 'ORANGE') ? COLOR_ORANGE : COLOR_BLUE;
+    const otherVal    = (dominant_color === 'ORANGE') ? COLOR_BLUE : COLOR_ORANGE;
+
+    // Build pixel array and shuffle randomly
+    let pixels = new Array(numDominant).fill(dominantVal).concat(new Array(numOther).fill(otherVal));
+    pixels = jsPsych.randomization.shuffle(pixels);
 
     // Render Canvas
     const canvas = document.createElement('canvas');
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
     const ctx = canvas.getContext('2d');
 
-    // Background
-    ctx.fillStyle = "black";
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
-    // Main Horizontal Line
-    ctx.strokeStyle = "white";
-    ctx.lineWidth = lineThickness;
-    ctx.beginPath();
-    ctx.moveTo(startX, lineY);
-    ctx.lineTo(endX, lineY);
-    ctx.stroke();
-
-    // Bisection Mark (Vertical Tick) perfectly aligned with the fixation cross vertical bar
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(centerX, lineY - (tickHeight / 2));
-    ctx.lineTo(centerX, lineY + (tickHeight / 2));
-    ctx.stroke();
+    const cellSize = canvasSize / gridSize;
+    for (let y = 0; y < gridSize; y++) {
+      for (let x = 0; x < gridSize; x++) {
+        const rgb = pixels[y * gridSize + x];
+        ctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+        ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize);
+      }
+    }
 
     const dataURL = canvas.toDataURL();
     return `
-      <div class="stimulus-layout">
-        <img src="${dataURL}" style="width: ${canvasWidth}px; height: ${canvasHeight}px; border: 3px solid #555;" />
+      <div class="pixel-canvas-container">
+        <img src="${dataURL}" style="width: 300px; height: 300px; border: 3px solid #555;" />
       </div>
+      <p style="color: white; font-size: 20px; font-weight: bold;">
+        Which color is dominant? Press <b>A</b> (<span style="color: #ff7700;">ORANGE</span>) or <b>L</b> (<span style="color: #0088ff;">BLUE</span>)
+      </p>
     `;
   }
 
@@ -147,8 +100,8 @@
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
       <h2>Welcome to the Experiment</h2>
-      <p>In this task, you will see a horizontal line divided into two sections by a vertical mark.</p>
-      <p>Your task is to decide which side of the line is longer.</p>
+      <p>In this task, you will see a patch containing a mixture of <b>ORANGE</b> and <b>BLUE</b> pixels.</p>
+      <p>Your task is to decide which color is more dominant in the patch.</p>
       <br>
       <p>Press <b>SPACEBAR</b> to continue.</p>
     `,
@@ -157,15 +110,11 @@
     type: jsPsychHtmlKeyboardResponse,
     stimulus: `
       <h2>Task Instructions</h2>
-      <p>Judge which segment of the line is longer as quickly and accurately as possible:</p>
-      <p style="margin-top: 15px;">
-        Press <b>A</b> if the <b>LEFT</b> side is longer.
-      </p>
-      <p>
-        Press <b>L</b> if the <b>RIGHT</b> side is longer.
-      </p>
+      <p>Judge the dominant pixel color as quickly and accurately as possible:</p>
+      <p>Press <b>A</b> if there are more <b>ORANGE</b> pixels.</p>
+      <p>Press <b>L</b> if there are more <b>BLUE</b> pixels.</p>
       <br>
-      <p>Press <b>SPACEBAR</b> to start the practice phase.</p>
+      <p>Press <b>SPACEBAR</b> to start a short practice phase.</p>
     `,
     choices: [' ']
   });
@@ -174,44 +123,44 @@
   // SECTION B: PRACTICE PHASE (20 TRIALS)
   // ==========================================
   const practice_conditions = [
-    { coherence: 0.80, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.70, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.60, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.50, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.40, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.30, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.25, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.20, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.25, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.10, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.05, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.01, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.01, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.01, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.01, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.01, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.01, dominant: 'RIGHT', correct_key: 'l' }
+    { coherence: 0.70, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.65, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.60, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.55, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.50, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.40, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.35, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.25, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.20, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.15, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.10, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.10, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.10, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.10, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.10, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.05, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.05, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.05, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.05, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.05, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.03, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.03, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.03, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.03, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.03, dominant: 'BLUE',   correct_key: 'l' }
   ];
 
   const practice_trial = {
     type: jsPsychHtmlKeyboardResponse,
     choices: ['a', 'l'],
-    stimulus: () => generateLineBisectionHTML(
+    stimulus: () => generatePixelArrayHTML(
       jsPsych.timelineVariable('coherence'), 
       jsPsych.timelineVariable('dominant')
     ),
     data: {
       phase: 'practice',
       coherence: () => jsPsych.timelineVariable('coherence'),
-      dominant_side: () => jsPsych.timelineVariable('dominant'),
+      dominant_color: () => jsPsych.timelineVariable('dominant'),
       correct_key: () => jsPsych.timelineVariable('correct_key')
     }
   };
@@ -234,7 +183,7 @@
   timeline.push({
     timeline: [fixation, practice_trial, practice_feedback],
     timeline_variables: practice_conditions,
-    randomize_order: false
+    randomize_order: false // Presents practice trials in order from easiest (0.70) to hardest (0.05)
   });
 
   // ==========================================
@@ -270,12 +219,12 @@
   // SECTION D: MAIN EXPERIMENT (10 BLOCKS x 60 TRIALS)
   // ==========================================
   const main_conditions = [
-    { coherence: 0.75, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.75, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.03, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.03, dominant: 'RIGHT', correct_key: 'l' },
-    { coherence: 0.01, dominant: 'LEFT',  correct_key: 'a' },
-    { coherence: 0.01, dominant: 'RIGHT', correct_key: 'l' }
+    { coherence: 0.65, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.65, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.10, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.10, dominant: 'BLUE',   correct_key: 'l' },
+    { coherence: 0.03, dominant: 'ORANGE', correct_key: 'a' },
+    { coherence: 0.03, dominant: 'BLUE',   correct_key: 'l' }
   ];
 
   const block_types = jsPsych.randomization.shuffle([
@@ -299,7 +248,7 @@
     const main_trial = {
       type: jsPsychHtmlKeyboardResponse,
       choices: ['a', 'l'],
-      stimulus: () => generateLineBisectionHTML(
+      stimulus: () => generatePixelArrayHTML(
         jsPsych.timelineVariable('coherence'), 
         jsPsych.timelineVariable('dominant')
       ),
@@ -311,7 +260,7 @@
         block_number: block_idx + 1,
         block_condition: current_block_type,
         coherence: () => jsPsych.timelineVariable('coherence'),
-        dominant_side: () => jsPsych.timelineVariable('dominant'),
+        dominant_color: () => jsPsych.timelineVariable('dominant'),
         correct_key: () => jsPsych.timelineVariable('correct_key')
       }
     };
